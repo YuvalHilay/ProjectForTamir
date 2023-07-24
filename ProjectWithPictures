@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html>
+<head>
+
+  <style>
+    body {
+      position: relative;
+    }
+    .imageContainer {
+      display: inline-block;
+      position: absolute;
+    }
+    img {
+      max-width: 200px;
+      max-height: 200px;
+      cursor: pointer;
+    }
+    #buttonsContainer {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+    }
+    button {
+      padding: 10px 20px;
+      margin: 5px;
+      border: 2px solid black;
+      background-color: transparent;
+      color: black;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    #loadButtonContainer {
+      position: fixed;
+      bottom: 20px;
+      left: 20px;
+    }
+  </style>
+</head>
+<body>
+
+<div id="loadButtonContainer">
+  <input type="file" id="fileInput" multiple>
+</div>
+
+<div id="imageContainer"></div>
+
+<div id="buttonsContainer">
+  <button onclick="rotateLeft()">Rotate Left</button>
+  <button onclick="rotateRight()">Rotate Right</button>
+  <label for="angleInput">Set angle (in degrees):</label>
+  <input type="number" id="angleInput" value="0" min="0" max="360" step="1" oninput="rotateCustom()">
+</div>
+<!--for Tamir change it to your location -->
+<script src="path/to/opencv.js"></script>
+<!--for Tamir change it to your location -->
+<script>
+  let images = [];
+  let selectedImage = null;
+
+  function loadImages(event) {
+    const files = event.target.files;
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+      if (file.type.startsWith('image/')) {
+        const reader = new FileReader();
+        reader.onload = function() {
+          const image = document.createElement('img');
+          image.src = reader.result;
+          image.className = 'imageContainer';
+          image.style.top = `${Math.random() * (window.innerHeight - 200)}px`;
+          image.style.left = `${Math.random() * (window.innerWidth - 200)}px`;
+          image.addEventListener('click', function(event) {
+            selectImage(event.target);
+          });
+          document.getElementById('imageContainer').appendChild(image);
+        };
+        reader.readAsDataURL(file);
+      }
+    }
+  }
+
+  function selectImage(image) {
+    selectedImage = image;
+  }
+
+  function rotateLeft() {
+    const angleInput = document.getElementById('angleInput');
+    angleInput.value = parseInt(angleInput.value) - 45;
+    rotateCustom();
+  }
+
+  function rotateRight() {
+    const angleInput = document.getElementById('angleInput');
+    angleInput.value = parseInt(angleInput.value) + 45;
+    rotateCustom();
+  }
+
+  function rotateCustom() {
+    const angleInput = document.getElementById('angleInput');
+    const angle = parseInt(angleInput.value);
+    if (selectedImage) {
+      const originalImage = new Image();
+      originalImage.src = selectedImage.src;
+      originalImage.onload = function() {
+        const canvas = document.createElement('canvas');
+        canvas.width = originalImage.width;
+        canvas.height = originalImage.height;
+        const ctx = canvas.getContext('2d');
+        ctx.translate(originalImage.width / 2, originalImage.height / 2);
+        ctx.rotate(angle * (Math.PI / 180));
+        ctx.drawImage(originalImage, -originalImage.width / 2, -originalImage.height / 2, originalImage.width, originalImage.height);
+        selectedImage.src = canvas.toDataURL();
+      };
+    }
+  }
+
+  document.getElementById('fileInput').addEventListener('change', loadImages);
+</script>
+</body>
+</html>
